@@ -35,18 +35,18 @@ else
 fi
 
 cd "$BENCH_DIR"/Megatron-LM-ROCm
-# fixing the commit 
+# Fixing the commit 
 git checkout 21045b59127cd2d5509f1ca27d81fae7b485bd22
 
-# apply rocm_patch
+# Apply rocm fixes for megatron
 if ! [ -f "$PATCH_APPLIED" ]; then
-    git apply "$BENCH_DIR"/aux/amd_energy_llm_fix.patch
+    git apply "$BENCH_DIR"/../aux/amd_megatron_energy_llm_fix.patch
     touch $PATCH_APPLIED
 fi
 
 # Modified PyTorch launcher for JSC systems 
 if ! [ -f "fixed_torch_run.py" ]; then
-  ln -sf "$BENCH_DIR"/aux/fixed_torch_run.py ./fixed_torch_run.py
+  ln -sf "$BENCH_DIR"/../aux/fixed_torch_run.py ./fixed_torch_run.py
 fi
 
 # Power script without jpwr

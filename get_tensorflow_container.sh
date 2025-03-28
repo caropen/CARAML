@@ -1,7 +1,7 @@
 set -euox pipefail
 
 if [ "x$BENCH_DIR" = "x" ]; then
-    echo "BENCH_DIR is not set. Please set it to the `resnet50` directory of benchmark" >&2
+    echo "BENCH_DIR is not set. Please set it to the `image_classification` directory of benchmark" >&2
     exit 1
 fi
 
@@ -14,7 +14,7 @@ TENSORFLOW_CONTAINER_FILE_NVIDIA_X86=$ROOT_DIR/containers/ngc2301_tf115_cuda1201
 TENSORFLOW_CONTAINER_FILE_NVIDIA_ARM=$ROOT_DIR/containers/ngc2301_tf115_cuda1201_nccl2165_py38_arm.sif
 TENSORFLOW_CONTAINER_FILE_AMD=$ROOT_DIR/containers/amd_tf27_rocm50_py39-dev.sif
 TENSORFLOW_CONTAINER_FILE_IPU=$ROOT_DIR/containers/ipu_tf263_poplar310_py38.sif
-TENSORFLOW_CONTAINER_FILE_DONE=$BENCH_DIR/tensorflow_container_done
+TENSORFLOW_CONTAINER_FILE_DONE=$ROOT_DIR/tensorflow_container_done
 
 TENSORFLOW_PACKAGES_AMD=$BENCH_DIR/amd_tensorflow_packages
 TENSORFLOW_PACKAGES_IPU=$BENCH_DIR/ipu_tensorflow_packages
@@ -102,7 +102,7 @@ if ! [ -f $TENSORFLOW_PACKAGES_FILE_AMD ] && [ "$ACCELERATOR" = "MI250" ]; then
                     --prefix=$TENSORFLOW_PACKAGES_AMD \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/amd_tensorflow_requirements.txt\
+                    -r $ROOT_DIR/requirements/amd_tensorflow_requirements.txt\
                      >&2
     touch $TENSORFLOW_PACKAGES_FILE_AMD
     echo "Done building additional packages for $ACCELERATOR in $TENSORFLOW_PACKAGES_AMD" >&2
@@ -118,7 +118,7 @@ elif ! [ -f $TENSORFLOW_PACKAGES_FILE_IPU ] && [ "$ACCELERATOR" = "GC200" ]; the
                     --prefix=$TENSORFLOW_PACKAGES_IPU \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/ipu_tensorflow_requirements.txt \
+                    -r $ROOT_DIR/requirements/ipu_tensorflow_requirements.txt \
                      >&2
     touch $TENSORFLOW_PACKAGES_FILE_IPU
     echo "Done building additional packages for $ACCELERATOR in $TENSORFLOW_PACKAGES_IPU" >&2
@@ -134,7 +134,7 @@ elif ! [ -f $TENSORFLOW_PACKAGES_FILE_NVIDIA_X86 ] && [[ " ${NVIDIA_X86_ACCELERA
                     --prefix=$TENSORFLOW_PACKAGES_NVIDIA_X86 \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/nvidia_x86_tensorflow_requirements.txt\
+                    -r $ROOT_DIR/requirements/nvidia_x86_tensorflow_requirements.txt\
                      >&2
     touch $TENSORFLOW_PACKAGES_FILE_NVIDIA_X86
     echo "Done building additional packages for $ACCELERATOR in $TENSORFLOW_PACKAGES_NVIDIA_X86" >&2
@@ -150,7 +150,7 @@ elif ! [ -f $TENSORFLOW_PACKAGES_FILE_NVIDIA_ARM ] && [[ " ${NVIDIA_ARM_ACCELERA
                     --prefix=$TENSORFLOW_PACKAGES_NVIDIA_ARM \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/nvidia_arm_tensorflow_requirements.txt\
+                    -r $ROOT_DIR/requirements/nvidia_arm_tensorflow_requirements.txt\
                      >&2
     touch $TENSORFLOW_PACKAGES_FILE_NVIDIA_ARM
     echo "Done building additional packages for $ACCELERATOR in $TENSORFLOW_PACKAGES_NVIDIA_ARM" >&2

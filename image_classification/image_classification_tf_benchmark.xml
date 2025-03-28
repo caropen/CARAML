@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Tensorflow benchmark for 
+<!-- Imagenet Classification Tensorflow benchmark for 
   JEDI-GH200 NVIDIA Node:
     4× NVIDIA GH200 Grace-Hopper Superchip 
     CPU: NVIDIA Grace (Arm Neoverse-V2), 72 cores at 3.1 GHz base frequency; 120 GB LPDDR5X memory at 512 GB/s (8532 MHz)
@@ -13,7 +13,7 @@
     1× NVIDIA GH200 Grace-Hopper Superchip
     CPU: 1 × NVIDIA Grace, 72 cores
     GPU: 1 × NVIDIA H100
-    Memory: 480 GiB LPDDR5X and 96 GiB HBM3
+    Memory: 480 GiB LPDDR5X and 96 GiB 
     Network: 1 × NVIDIA ConnectX-7 @ 2 × EDR (200 Gbit/s)
     Available: 1 chip
 
@@ -66,8 +66,8 @@
 -->
 
 <jube>
-  <!-- resnet50_benchmark_run -->
-  <benchmark name="tensorflow_benchmark" outpath="resnet50_benchmark_run">
+  <!-- image_classification_benchmark_run -->
+  <benchmark name="tensorflow_benchmark" outpath="image_classification_benchmark_run">
     <parameterset name="systemInfo">
       <parameter name="system_version" mode="shell">echo 2024.01</parameter>
       <parameter name="system_name" type="str" tag="JEDI">JEDI</parameter>
@@ -160,7 +160,7 @@
       <!-- Benchmark file -->
       <parameter name="executable" tag="!GC200+!container">python ${folder}/tf_cnn_benchmarks.py</parameter>
       <parameter name="executable" tag="GC200+!container">python3 ${folder}/train.py</parameter>
-      <parameter name="executable" tag="(H100|GH200|MI250|GC200)+container">bash ${jube_benchmark_home}/get_tensorflow_container.sh</parameter>
+      <parameter name="executable" tag="(H100|GH200|MI250|GC200)+container">bash ${root_dir}/get_tensorflow_container.sh</parameter>
       <!-- Benchmark file arguments -->
       <parameter name="args_exec" separator="!" tag="GC200+!container"> ${data_arg} --config=${tf_model}  --validation=false  --mlperf-logging --num-replicas=${replicas} --num-epochs=1 --global-batch-size=${global_batch_size} --micro-batch-size=${ipu_mbs} --dbn-replica-group-size=${dbn_replica}</parameter>
       <parameter name="args_exec" separator="!" tag="!GC200+!container+!synthetic">--num_gpus $gpus --model $tf_model --batch_size ${batch_size_per_device} --data_dir=${data_dir} --variable_update horovod --use_fp16=True</parameter>
@@ -215,9 +215,9 @@
         "WAIH100": "$jube_benchmark_home/nvidia_x86_tensorflow_packages/lib/python3.8/site-packages",
         "H100": "$jube_benchmark_home/nvidia_x86_tensorflow_packages/lib/python3.8/site-packages" ,
         "A100": "$jube_benchmark_home/nvidia_x86_tensorflow_packages/lib/python3.8/site-packages",
-        <!-- amd_requirements.txt -->
+        <!-- amd_tensorflow_requirements.txt -->
         "MI250": "$jube_benchmark_home/amd_tensorflow_packages/lib/python3.9/site-packages",
-        <!-- ipu_requirements.txt -->
+        <!-- ipu_tensorflow_requirements.txt -->
         "GC200": "$jube_benchmark_home/ipu_tensorflow_packages/lib/python3.8/site-packages"
       }["${system_name}"]</parameter>
       <parameter name="load_modules" separator="!" tag="!container" mode="python">
@@ -308,7 +308,7 @@
       <use>systemParameter</use>
       <use>modelParameter</use>
       <do>module load GCC SciPy-bundle</do>
-      <do>python3 ${jube_benchmark_home}/aux/combine_energy.py --output ${jube_benchmark_home}/${jube_wp_relpath}/combined_energy.csv $$(printf "${jube_benchmark_home}/${jube_wp_relpath}/execute/${system_name}_power.%d.energy.csv " $$(seq 0 $$((${tasks}-1))))</do>
+      <do>python3 ${jube_benchmark_home}/../aux/combine_energy.py --output ${jube_benchmark_home}/${jube_wp_relpath}/combined_energy.csv $$(printf "${jube_benchmark_home}/${jube_wp_relpath}/execute/${system_name}_power.%d.energy.csv " $$(seq 0 $$((${tasks}-1))))</do>
    </step>>
 
     <patternset name="pattern">

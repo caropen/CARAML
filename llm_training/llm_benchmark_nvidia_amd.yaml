@@ -2,7 +2,7 @@ name:    llm-nvidia-amd
 outpath: llm_benchmark_nvidia_amd_run
 comment: llm benchmark jube script for NVIDIA-A100,H100,GH200 and AMD-MI250
 # Megatron-LM benchmark for 
-  #   JEDI-GH200 NVIDIA Node:
+  # JEDI-GH200 NVIDIA Node:
   #   4× NVIDIA GH200 Grace-Hopper Superchip 
   #   CPU: NVIDIA Grace (Arm Neoverse-V2), 72 cores at 3.1 GHz base frequency; 120 GB LPDDR5X memory at 512 GB/s (8532 MHz)
   #   GPU: NVIDIA Hopper H100, 132 multiprocessors, 96 GB HBM3 memory at 4 TB/s
@@ -255,8 +255,8 @@ parameterset:
           fi
 
           # Input data
-          VOCAB_FILE="$BENCH_DIR"/aux/tokenizers/gpt2-vocab.json
-          MERGE_FILE="$BENCH_DIR"/aux/tokenizers/gpt2-merges.txt
+          VOCAB_FILE="$BENCH_DIR"/tokenizers/gpt2-vocab.json
+          MERGE_FILE="$BENCH_DIR"/tokenizers/gpt2-merges.txt
 
           # Path to a singular, preprocessed dataset.
           LLM_DATA_PATH="$BENCH_DIR"/llm_data/oscar_text_document
@@ -373,7 +373,7 @@ parameterset:
         tag: "container"
         update_mode: step
         _: 
-          "{'get_container': 'bash  ${jube_benchmark_home}/get_pytorch_container.sh'}['$jube_step_name']"
+          "{'get_container': 'bash  ${root_dir}/get_pytorch_container.sh'}['$jube_step_name']"
 
   - name: executeset
     init_with: platform.xml
@@ -383,25 +383,25 @@ parameterset:
         tag: "JEDI+!container"
         separator: |
         _: |
-          --cpu_bind=v --mpi=pmi2 apptainer exec  --bind=${jube_benchmark_home} --nv ${singularity_file} ${jube_benchmark_home}/nvidia_arm_torch_wrap.sh
+          --cpu_bind=v --mpi=pmi2 apptainer exec  --bind=${jube_benchmark_home},${root_dir} --nv ${singularity_file} ${root_dir}/nvidia_arm_torch_wrap.sh
       - name: args_starter
         mode: text
         tag: "!(JEDI|MI250|GH200|H100)+!container"
         separator: |
         _: |
-          --disable-dcgm --cpu_bind=v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home} --nv ${singularity_file} ${jube_benchmark_home}/nvidia_x86_torch_wrap.sh
+          --disable-dcgm --cpu_bind=v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home},${root_dir} --nv ${singularity_file} ${root_dir}/nvidia_x86_torch_wrap.sh
       - name: args_starter
         mode: text
         tag: "(GH200|H100)+!container"
         separator: |
         _: |
-          --cpu_bind=v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home} --nv ${singularity_file} ${jube_benchmark_home}/nvidia_arm_torch_wrap.sh
+          --cpu_bind=v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home},${root_dir} --nv ${singularity_file} ${root_dir}/nvidia_arm_torch_wrap.sh
       - name: args_starter
         mode: text
         tag: "MI250+!container"
         separator: |
         _: |
-          --cpu_bind=none,v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home} ${singularity_file} ${jube_benchmark_home}/amd_torch_wrap.sh
+          --cpu_bind=none,v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home},${root_dir} ${singularity_file} ${root_dir}/amd_torch_wrap.sh
 
 patternset:
    - name: perf_patterns
@@ -525,5 +525,5 @@ step:
         - modelParameter
       do:
         - module load GCC SciPy-bundle
-        - python3 ${jube_benchmark_home}/aux/combine_energy.py --output ${jube_benchmark_home}/${jube_wp_relpath}/combined_energy.csv $$(printf "${jube_benchmark_home}/${jube_wp_relpath}/benchmark/${system_name}_power.%d.energy.csv " $$(seq 0 $$((${total_devices}-1))))
+        - python3 ${root_dir}/aux/combine_energy.py --output ${jube_benchmark_home}/${jube_wp_relpath}/combined_energy.csv $$(printf "${jube_benchmark_home}/${jube_wp_relpath}/benchmark/${system_name}_power.%d.energy.csv " $$(seq 0 $$((${total_devices}-1))))
 

@@ -142,7 +142,7 @@ parameterset:
           export LIBRARY_PATH=\${POPART_ROOT}/lib\${LIBRARY_PATH:+:\${LIBRARY_PATH}}
           export LD_LIBRARY_PATH=\${POPART_ROOT}/lib\${LD_LIBRARY_PATH:+:\${LD_LIBRARY_PATH}}
           export PYTHONPATH=\${POPART_ROOT}/python:\$PYTHONPATH
-      - {name: packages,     _: $jube_benchmark_home/ipu_torch_packages/lib/python3.8/site-packages}
+      - {name: packages,     _: $root_dir/ipu_torch_packages/lib/python3.8/site-packages}
       - name: executable
         separator: ";"
         tag: "!container"
@@ -152,7 +152,7 @@ parameterset:
         separator: "!"
         tag: "container"
         _: 
-          bash  ${jube_benchmark_home}/get_pytorch_container.sh
+          bash  ${root_dir}/get_pytorch_container.sh
       - name: preprocess
         mode: text
         tag: "!container"
@@ -183,7 +183,7 @@ parameterset:
         tag: "!container"
         separator: |
         _: |
-          --cpu_bind=none,v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home}  ${singularity_file} ${jube_benchmark_home}/ipu_torch_wrap.sh
+          --cpu_bind=none,v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home},${root_dir}  ${singularity_file} ${root_dir}/ipu_torch_wrap.sh
   
 
 fileset:
@@ -253,8 +253,8 @@ step:
       do:
         mode: shell
         _: |
-          printf "%s\n" '#!/bin/bash' "${container_env}" "export PYTHONPATH=${packages}:\$PYTHONPATH" "\$*" > ${jube_benchmark_home}/ipu_torch_wrap.sh
-          chmod u+rwx ${jube_benchmark_home}/ipu_torch_wrap.sh
+          printf "%s\n" '#!/bin/bash' "${container_env}" "export PYTHONPATH=${packages}:\$PYTHONPATH" "\$*" > ${root_dir}/ipu_torch_wrap.sh
+          chmod u+rwx ${root_dir}/ipu_torch_wrap.sh
   
     - name: wrap
       tag: container
@@ -264,8 +264,8 @@ step:
       do:
         mode: shell
         _: |
-          printf "%s\n" '#!/bin/bash' "${container_env}" "\$*" > ${jube_benchmark_home}/ipu_torch_wrap.sh
-          chmod u+rwx ${jube_benchmark_home}/ipu_torch_wrap.sh
+          printf "%s\n" '#!/bin/bash' "${container_env}" "\$*" > ${root_dir}/ipu_torch_wrap.sh
+          chmod u+rwx ${root_dir}/ipu_torch_wrap.sh
 
     - name: get_container
       tag: "container"
@@ -311,5 +311,5 @@ step:
         - modelParameter
       do:
         - module load GCC SciPy-bundle
-        - python3 ${jube_benchmark_home}/aux/combine_energy.py --output ${jube_benchmark_home}/${jube_wp_relpath}/combined_energy.csv $$(printf "${jube_benchmark_home}/${jube_wp_relpath}/benchmark/${system_name}_power.%d.energy.csv " $$(seq 0 $$((${tasks}-1))))
+        - python3 ${root_dir}/aux/combine_energy.py --output ${jube_benchmark_home}/${jube_wp_relpath}/combined_energy.csv $$(printf "${jube_benchmark_home}/${jube_wp_relpath}/benchmark/${system_name}_power.%d.energy.csv " $$(seq 0 $$((${tasks}-1))))
 

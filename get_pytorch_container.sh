@@ -1,7 +1,7 @@
 set -euox pipefail
 
 if [ "x$BENCH_DIR" = "x" ]; then
-    echo "BENCH_DIR is not set. Please set it to the `llm_training` directory of benchmark" >&2
+    echo "BENCH_DIR is not set. Please set it to the `llm_training or image_classification` directory of benchmark" >&2
     exit 1
 fi
 
@@ -17,16 +17,16 @@ PYTORCH_CONTAINER_FILE_NVIDIA_X86=$ROOT_DIR/containers/ngc2406_pytorch24_cuda125
 PYTORCH_CONTAINER_FILE_NVIDIA_ARM=$ROOT_DIR/containers/ngc2402_pytorch23_cuda123_nccl219_py310_arm.sif
 PYTORCH_CONTAINER_FILE_IPU=$ROOT_DIR/containers/ipu_pytorch20_poplar33_py38.sif
 PYTORCH_CONTAINER_FILE_AMD=$ROOT_DIR/containers/amd_pytorch21_rocm612_rccl2186_py39.sif
-PYTORCH_CONTAINER_FILE_DONE=$BENCH_DIR/pytorch_container_done
+PYTORCH_CONTAINER_FILE_DONE=$ROOT_DIR/pytorch_container_done
 
-PYTORCH_PACKAGES_IPU=$BENCH_DIR/ipu_torch_packages
-PYTORCH_PACKAGES_FILE_IPU=$BENCH_DIR/ipu_torch_packages_installed
-PYTORCH_PACKAGES_AMD=$BENCH_DIR/amd_torch_packages
-PYTORCH_PACKAGES_FILE_AMD=$BENCH_DIR/amd_torch_packages_installed
-PYTORCH_PACKAGES_NVIDIA_X86=$BENCH_DIR/nvidia_x86_torch_packages
-PYTORCH_PACKAGES_FILE_NVIDIA_X86=$BENCH_DIR/nvidia_x86_torch_packages_installed
-PYTORCH_PACKAGES_NVIDIA_ARM=$BENCH_DIR/nvidia_arm_torch_packages
-PYTORCH_PACKAGES_FILE_NVIDIA_ARM=$BENCH_DIR/nvidia_arm_torch_packages_installed
+PYTORCH_PACKAGES_IPU=$ROOT_DIR/ipu_torch_packages
+PYTORCH_PACKAGES_FILE_IPU=$ROOT_DIR/ipu_torch_packages_installed
+PYTORCH_PACKAGES_AMD=$ROOT_DIR/amd_torch_packages
+PYTORCH_PACKAGES_FILE_AMD=$ROOT_DIR/amd_torch_packages_installed
+PYTORCH_PACKAGES_NVIDIA_X86=$ROOT_DIR/nvidia_x86_torch_packages
+PYTORCH_PACKAGES_FILE_NVIDIA_X86=$ROOT_DIR/nvidia_x86_torch_packages_installed
+PYTORCH_PACKAGES_NVIDIA_ARM=$ROOT_DIR/nvidia_arm_torch_packages
+PYTORCH_PACKAGES_FILE_NVIDIA_ARM=$ROOT_DIR/nvidia_arm_torch_packages_installed
 
 if ! [ -d "$ROOT_DIR/containers" ]; then
     mkdir -p "$ROOT_DIR/containers"
@@ -98,7 +98,7 @@ if ! [ -f $PYTORCH_PACKAGES_FILE_IPU ] && [ "$ACCELERATOR" = "GC200" ]; then
                     --prefix=$PYTORCH_PACKAGES_IPU \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/ipu_torch_requirements.txt \
+                    -r $ROOT_DIR/requirements/ipu_torch_requirements.txt \
                     >&2
     touch $PYTORCH_PACKAGES_FILE_IPU
     echo "Done building additional packages for $ACCELERATOR in $PYTORCH_PACKAGES_IPU " >&2
@@ -110,7 +110,7 @@ elif ! [ -f $PYTORCH_PACKAGES_FILE_AMD ] && [ "$ACCELERATOR" = "MI250" ]; then
                     --prefix=$PYTORCH_PACKAGES_AMD \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/amd_torch_requirements.txt \
+                    -r $ROOT_DIR/requirements/amd_torch_requirements.txt \
                     >&2
     touch $PYTORCH_PACKAGES_FILE_AMD
     echo "Done building additional packages for $ACCELERATOR in $PYTORCH_PACKAGES_AMD " >&2
@@ -122,7 +122,7 @@ elif ! [ -f $PYTORCH_PACKAGES_FILE_NVIDIA_X86 ] && [[ " ${NVIDIA_X86_ACCELERATOR
                     --prefix=$PYTORCH_PACKAGES_NVIDIA_X86 \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/nvidia_x86_torch_requirements.txt \
+                    -r $ROOT_DIR/requirements/nvidia_x86_torch_requirements.txt \
                     >&2
     touch $PYTORCH_PACKAGES_FILE_NVIDIA_X86
     echo "Done building additional packages for $ACCELERATOR in $PYTORCH_PACKAGES_NVIDIA_X86 " >&2
@@ -134,7 +134,7 @@ elif ! [ -f $PYTORCH_PACKAGES_FILE_NVIDIA_ARM ] && [[ " ${NVIDIA_ARM_ACCELERATOR
                     --prefix=$PYTORCH_PACKAGES_NVIDIA_ARM \
                     --ignore-installed --no-deps \
                     --no-cache-dir \
-                    -r $BENCH_DIR/requirements/nvidia_arm_torch_requirements.txt \
+                    -r $ROOT_DIR/requirements/nvidia_arm_torch_requirements.txt \
                     >&2
     touch $PYTORCH_PACKAGES_FILE_NVIDIA_ARM
     echo "Done building additional packages for $ACCELERATOR in $PYTORCH_PACKAGES_NVIDIA_ARM " >&2

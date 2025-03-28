@@ -48,18 +48,18 @@ fi
 # Where the Megatron-LM code is stored
 MEGATRON_LM_REPO="$BENCH_DIR"/Megatron-LM
 cd "$MEGATRON_LM_REPO"
-# fixing the commit 
+# Fixing the commit 
 git checkout f7727433293427bef04858f67b2889fe9b177d88 
 
-# apply add_tflops_logging.patch
+# Apply tflops logging and energy patch
 if ! [ -f "$PATCH_APPLIED" ]; then
-    git apply "$BENCH_DIR"/aux/nvidia_energy_llm_fix.patch
+    git apply "$BENCH_DIR"/../aux/nvidia_megatron_energy_llm_fix.patch
     touch $PATCH_APPLIED
 fi
 
 # Modified PyTorch launcher for JSC systems 
 if ! [ -f "fixed_torch_run.py" ]; then
-  ln -sf "$BENCH_DIR"/aux/fixed_torch_run.py ./fixed_torch_run.py
+  ln -sf "$BENCH_DIR"/../aux/fixed_torch_run.py ./fixed_torch_run.py
 fi
 
 # Power script without jpwr
