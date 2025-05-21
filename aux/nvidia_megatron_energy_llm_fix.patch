@@ -270,7 +270,7 @@ index 09e0710a..7237b2ca 100644
 +            power_methods.append(power())
 +
 +
-+    with get_power(power_methods, 100) as measured_scope:
++    with get_power(power_methods, 100, options={"ignore_measure_errors" : True}) as measured_scope:
 +        pretrain(train_valid_test_datasets_provider,
 +                 model_provider,
 +                 ModelType.encoder_or_decoder,

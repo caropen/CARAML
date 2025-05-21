@@ -23,9 +23,12 @@ PYTORCH_PACKAGES_IPU=$ROOT_DIR/ipu_torch_packages
 PYTORCH_PACKAGES_FILE_IPU=$ROOT_DIR/ipu_torch_packages_installed
 PYTORCH_PACKAGES_AMD=$ROOT_DIR/amd_torch_packages
 PYTORCH_PACKAGES_FILE_AMD=$ROOT_DIR/amd_torch_packages_installed
-PYTORCH_PACKAGES_NVIDIA_X86=$ROOT_DIR/nvidia_x86_torch_packages
-PYTORCH_PACKAGES_FILE_NVIDIA_X86=$ROOT_DIR/nvidia_x86_torch_packages_installed
-PYTORCH_PACKAGES_NVIDIA_ARM=$ROOT_DIR/nvidia_arm_torch_packages
+if [ -z "${PYTORCH_PACKAGES_NVIDIA_X86}" ]; then
+    PYTORCH_PACKAGES_NVIDIA_X86=$ROOT_DIR/nvidia_x86_torch_packages
+fi
+if [ -z "${PYTORCH_PACKAGES_FILE_NVIDIA_X86}" ]; then
+    PYTORCH_PACKAGES_FILE_NVIDIA_X86=$ROOT_DIR/nvidia_x86_torch_packages_installed
+fi
 PYTORCH_PACKAGES_FILE_NVIDIA_ARM=$ROOT_DIR/nvidia_arm_torch_packages_installed
 
 if ! [ -d "$ROOT_DIR/containers" ]; then
@@ -141,4 +144,5 @@ elif ! [ -f $PYTORCH_PACKAGES_FILE_NVIDIA_ARM ] && [[ " ${NVIDIA_ARM_ACCELERATOR
 else
     echo "No additional packages required for $ACCELERATOR" >&2
 fi
+
 

@@ -81,15 +81,18 @@ parameterset:
       # tp_size is preferred to be <=gpus_per node, to limit communication overhead
       - {name: tp_size,           type: int, mode: python, _: "[1,2,8,2][$modelidx]"}
       - {name: tp_size,           type: int, tag: "7B+parabench+!container", seperator: ",", mode: text, _: "1,2,4,8"}
+      - {name: tp_size,           type: int, tag: "7B+parabench+!container", seperator: ",", mode: text, _: "1"}
       # pp_size must be a divisor of nlayers
       - {name: pp_size,           type: int, mode: python, _: "[1,2,8,2][$modelidx]"}
       - name: pp_size
         type: int
         tag: "7B+parabench+!container"
         separator: ";"
-        mode: python
-        _: "{'1':'1;2;4;8', '2':'1;2;4', '4':'1;2', '8':'1'}['$tp_size']"
-      # - {name: pp_size,           type: int, tag: "7B+parabench+!container", seperator: ",", mode: python, _: "'1,2,4,8'"}
+        # mode: python
+        # _: "{'1':'1;2;4;8', '2':'1;2;4', '4':'1;2', '8':'1'}['$tp_size']"
+        mode: text
+        # _: "1;2;4;8"
+        _: "4"
       - {name: dp_size,           type: int, mode: python, _: "int( $total_devices / ($pp_size * $tp_size))"}
       - {name: dataset,           type: str,               _: "OSCAR"}
       - {name: total_devices,     type: int, mode: python, update_mode: step, _: "$gpus_per_node*$nodes"}
@@ -111,6 +114,21 @@ parameterset:
       - {name: modelargs,             tag: "175B", mode: text,        _: --bf16}
       - {name: megatron_repo,              tag: "JEDI|GH200|WAIH100|H100|A100", mode: text, _: Megatron-LM}
       - {name: megatron_repo,              tag: "MI250",                        mode: text, _: Megatron-LM-ROCm}
+      # - {name: flasharg, tag: "!flash", mode: text, _: "--use-flash-attn"}
+      # - {name: flasharg, tag: "flash", mode: text, _: "--use-flash-attn, "}
+      # - {name: flasharg, tag: "flash", mode: text, _:  ""}
+      # everything
+      - {name: extraargs, tag: "!flash", mode: text, _: "--use-flash-attn --sequence-parallel --recompute-activations --recompute-granularity selective"}
+      - name: extraargs
+        tag: "flash" 
+        separator: "," 
+        mode: text
+        _: > # 1. everything but flash attention 2. everything but sequence parallel, 3. everything but recompute activations, 4. everything and recompute-granularity full 5. everything
+          --sequence-parallel --recompute-activations --recompute-granularity selective,
+        #  --use-flash-attn --recompute-activations --recompute-granularity selective,
+        #  --use-flash-attn --sequence-parallel,
+        #   --use-flash-attn --sequence-parallel --recompute-activations --recompute-granularity full
+        #  --use-flash-attn --sequence-parallel --recompute-activations --recompute-granularity selective
       - name: optimizerargs
         mode: text
         tag: "!7B"
@@ -145,25 +163,24 @@ parameterset:
           --use-distributed-optimizer
       - name: additionalargs
         mode: text
-        tag: "(JEDI|GH200|WAIH100|H100|A100)+!7B"
+        tag: "(JEDI|GH200|WAIH100|H100|A100)+7B"
         _: >
           --loss-scale-window 500 
           --hysteresis 2 
           --min-loss-scale 1.0
           --initial-loss-scale 4096 
-          --position-embedding-type rope 
-          --use-flash-attn 
+          --position-embedding-type rope
+          $extraargs
       - name: additionalargs
         mode: text
-        tag: "(JEDI|GH200|WAIH100|H100|A100)+7B"
+        tag: "(JEDI|GH200|WAIH100|H100|A100)+!7B"
         _: >
           --loss-scale-window 1000 
           --hysteresis 2 
           --min-loss-scale 1.0
           --initial-loss-scale 4294967296
-          --position-embedding-type PositionEmbeddingType.rope
-          --use-flash-attn 
-        # TODO: benchmark without flash attention, and multiple versions
+          --position-embedding-type rope
+          $extraargs
       - name: additionalargs
         mode: text
         tag: "MI250"
@@ -187,9 +204,6 @@ parameterset:
           --tokenizer-type GPT2BPETokenizer 
           --init-method-std 0.0048
           --seed 42 
-          --sequence-parallel 
-          --recompute-activations 
-          --recompute-granularity selective 
           $modelargs 
           $optimizerargs 
           $additionalargs
@@ -217,7 +231,7 @@ parameterset:
       - {name: nodes,            type: int, tag: "800M",   _: 1}
       - {name: nodes,            type: int, tag: "13B",    _: 44}
       - {name: nodes,            type: int, tag: "175B",   _: 16}
-      - {name: nodes,            type: int, tag: "7B",   _: 24} # In OGX training this was 64, later increased to 128
+      - {name: nodes,            type: int, tag: "7B",   _: 16} # In OGX training this was 64, later increased to 128
       - {name: gpus_per_node,    type: int, tag: "!GH200+!MI250+!container", _: 4}
       - {name: gpus_per_node,    type: int, tag: "MI250+!container", _: 8}
       - {name: gpus_per_node,    type: int, tag: "(H100|MI250)+container", _: 1}
@@ -229,7 +243,8 @@ parameterset:
         _: "{'JEDI': '72', 'GH200': '72','WAIH100': '64','H100': '72', 'A100': '128', 'MI250': '48'}['${system_name}']"}
       - {name: threadspertask,  type: int, mode: python, tag: "container", _: 4}
       - {name: timelimit,        tag: "container",         _: "02:00:00"}
-      - {name: timelimit,        tag: "!container",         _: "00:15:00"} # set time limit +4mins than exit_duration
+      # - {name: timelimit,        tag: "!container",         _: "00:15:00"} # set time limit +4mins than exit_duration
+      - {name: timelimit,        tag: "!container",         _: "00:25:00"} # set time limit +4mins than exit_duration
       - {name: oottime,          type: int,                _: 120}
       - {name: ootsignal,        type: int,                _: 12}
       - {name: hint,                                      _: "nomultithread"}
@@ -251,6 +266,14 @@ parameterset:
       # rocm6.1.2_ubuntu20.04_py3.9_pytorch_release-2.1.2
       - {name: singularity_file, type: str, tag: "MI250", 
           _: "$root_dir/containers/amd_pytorch21_rocm612_rccl2186_py39.sif"}
+      # - {name: PYTORCH_PACKAGES_NVIDIA_X86, export: true, type: str , 
+      #     _: "$root_dir/nvidia_x86_torch_packages"}
+      # - {name: FLASH_ATTH_VERSION, export: true, type: str, tag: "flash-attention",
+      #     _: "1.0.1, 2.4.2"}
+      # - {name: PYTORCH_PACKAGES_NVIDIA_X86, export: true, type: str, tag: "flash-attention",
+      #     _: "${root_dir}/nvidia_x86_torch_packages_flash${FLASH_ATTH_VERSION}"}
+      # - {name: PYTORCH_PACKAGES_FILE_NVIDIA_X86, export: true, type: str , 
+      #     _: "${PYTORCH_PACKAGES_NVIDIA_X86}_installed"}
       - name: ibcomm
         tag: "!GH200|!MI250"
         _: |
@@ -405,6 +428,14 @@ parameterset:
       - name: executable
         mode: python
         separator: ";"
+        tag: "!container+!MI250+flash"
+        update_mode: step
+        _:
+          # "{'benchmark': \" \\\"python -m pip freeze\\\" 2>&1 | tee -a \\\"$$LOGS_PATH\\\"/main_log.txt & \\nwait\\ncd $$OLDDIR\", 'combine_energy': ''}['$jube_step_name']"
+          "{'benchmark': \" \\\"$$LAUNCHER $$CMD\\\" 2>&1 | tee -a \\\"$$LOGS_PATH\\\"/main_log.txt & \\nwait\\ncd $$OLDDIR\", 'combine_energy': ''}['$jube_step_name']"
+      - name: executable
+        mode: python
+        separator: ";"
         tag: "!container+MI250"
         update_mode: step
         _:
@@ -415,7 +446,7 @@ parameterset:
         tag: "container"
         update_mode: step
         _: 
-          "{'get_container': 'bash  ${root_dir}/get_pytorch_container.sh'}['$jube_step_name']"
+          "{'get_container': 'bash ${root_dir}/get_pytorch_container.sh'}['$jube_step_name']"
 
   - name: executeset
     init_with: platform.xml
@@ -428,10 +459,16 @@ parameterset:
           --cpu_bind=v --mpi=pmi2 apptainer exec --bind=${jube_benchmark_home},${root_dir} --nv ${singularity_file} ${BENCH_DIR}/nvidia_arm_torch_wrap.sh
       - name: args_starter
         mode: text
-        tag: "!(JEDI|MI250|GH200|H100)+!container"
+        tag: "!(JEDI|MI250|GH200|H100)+!container+!flash"
         separator: |
         _: |
           --disable-dcgm --cpu_bind=v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home},${root_dir} --nv ${singularity_file} ${BENCH_DIR}/nvidia_x86_torch_wrap.sh
+      - name: args_starter
+        mode: text
+        tag: "!(JEDI|MI250|GH200|H100)+!container+flash"
+        separator: |
+        _: |
+          --disable-dcgm --cpu_bind=v --mpi=pspmix env PMIX_SECURITY_MODE=native apptainer exec --bind=${jube_benchmark_home},${root_dir} --nv ${singularity_file} ${BENCH_DIR}/nvidia_x86_torch_wrap_flash.sh
       - name: args_starter
         mode: text
         tag: "GH200+!container"
@@ -546,6 +583,18 @@ step:
         - export BENCH_DIR=$jube_benchmark_home
         - bash $BENCH_DIR/setup_amd_llm.sh
 
+    - name: setup_flash
+      tag: "!MI250+!container+flash"
+      iterations: 1
+      depend: setup_llm
+      use:
+        - systemInfo
+      do:
+        - export BENCH_DIR=$jube_benchmark_home
+        - export ACCELERATOR=$system_name
+        - bash $BENCH_DIR/setup_nvidia_llm_flash.sh
+
+
     - name: benchmark
       tag: "!container+dry-run"
       iterations: 1
@@ -565,7 +614,25 @@ step:
           _:          echo "$submit $submit_script"
       
     - name: benchmark
-      tag: "!container+!dry-run"
+      tag: "!container+!dry-run+flash"
+      iterations: 1
+      depend: setup_flash
+      use:
+        - systemInfo
+        - systemParameter
+        - modelParameter
+        - executeset
+        - from: platform.xml
+          _: jobfiles
+        - from: platform.xml
+          _: executesub
+      do:
+          done_file:  $ready_file
+          error_file: $error_file
+          _:          $submit $submit_script
+
+    - name: benchmark
+      tag: "!container+!dry-run+!flash"
       iterations: 1
       depend: setup_llm
       use:
